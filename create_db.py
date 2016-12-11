@@ -19,7 +19,7 @@ cur = conn.cursor()
 cur.execute("""CREATE TABLE books 
                 (
                     title varchar(100), 
-                    isbn varchar(15),
+                    isbn varchar(13),
                     year integer,
                     pages integer
                 ) 
