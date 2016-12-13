@@ -23,6 +23,6 @@ cur.execute('GRANT ALL ON SCHEMA public TO postgres')
 cur.execute('GRANT ALL ON SCHEMA public TO public')
 
 
-# Clone connection.
+# Close connection.
 conn.commit()
 conn.close()
