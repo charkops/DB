@@ -7,3 +7,10 @@ and all it's data.
 
 So in order, to make it more realistic, we use the GoodReads API to collect
 real world data about Books, Authors and reviews.
+
+
+# Requirements
+
+1) Goodreads wrapper API for python --> https://github.com/sefakilic/goodreads
+2) PostegreSQL adapter for python --> http://initd.org/psycopg/
+3) PostegreSQL
