@@ -8,7 +8,14 @@ import psycopg2
 NUM_BOOKS = 25
 
 def load_book(title, isbn, year, pages, counter):
-    print title
+    cur.execute("""INSERT INTO books (title, isbn, year, pages) VALUES (
+            %s,
+            %s,
+            %s,
+            %s
+            )
+            """, (title, isbn, year, pages))
+    print 'Loaded book No. {0}'.format(counter + 1)
 
 
 # Connect to the database.
@@ -62,15 +69,8 @@ while loaded_books < NUM_BOOKS:
     if len(title) > 100:
         counter += 1
         continue
-
-    cur.execute("""INSERT INTO books (title, isbn, year, pages) VALUES (
-            %s,
-            %s,
-            %s,
-            %s
-            )
-            """, (title, isbn, year, pages))
-    print 'Loaded book No. {0}'.format(counter + 1)
+    
+    load_book(title, isbn, year, pages, counter)
     loaded_books += 1
     counter += 1
 
