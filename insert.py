@@ -5,9 +5,14 @@ from sys import exit
 import psycopg2
 
 
-NUM_BOOKS = 25
+NUM_BOOKS = 10 
+OFFSET = 121
 
 def load_book(title, isbn, year, pages, counter):
+    '''
+        Load a specific book into DB.
+
+    '''
     cur.execute("""INSERT INTO books (title, isbn, year, pages) VALUES (
             %s,
             %s,
@@ -16,6 +21,18 @@ def load_book(title, isbn, year, pages, counter):
             )
             """, (title, isbn, year, pages))
     print 'Loaded book No. {0}'.format(counter + 1)
+
+def load_author(author):
+    '''
+        Load a specific author into DB
+
+    '''
+    cur.execute("""INSERT INTO authors (name, origin, born) VALUES (
+            %s,
+            %s,
+            %s
+            ) 
+            """, (author.name, author.hometown, author.born_at))
 
 
 # Connect to the database.
@@ -40,14 +57,13 @@ except:
 cur = conn.cursor()
 
 
-authors_id = 1
 loaded_books = 0
 counter = 0
 # Create some entries to books.
 while loaded_books < NUM_BOOKS: 
     print 'Into book No. {0}'.format(counter + 1)
     try:
-        book = gc.book((counter + 1) * 121)
+        book = gc.book((counter + 1) * OFFSET)
     except KeyboardInterrupt:
         raise KeyboardInterrupt
     except:
@@ -81,24 +97,16 @@ while loaded_books < NUM_BOOKS:
         print 'Could not associate an author with this book, moving on'
         continue
     
-    cur.execute("""INSERT INTO authors (id, name, origin, born) VALUES (
-            %s,
-            %s,
-            %s,
-            %s
-            ) 
-            """, (authors_id, author.name, author.hometown, author.born_at))
-    
-    authors_id += 1
+    load_author(author)
+        
 
 print 'Tried to load {0} books'.format(counter)
 print 'Added a total of {0} books.'.format(loaded_books)
 
 
 # Insert 4 admin users (ourselves)
-cur.execute("""INSERT INTO users (id, kind, username, password, email) VALUES 
+cur.execute("""INSERT INTO users (kind, username, password, email) VALUES 
             (
-                1,
                 'admin',
                 'xbaremenos',
                 'l337H@ck4R!!1!',
@@ -106,9 +114,8 @@ cur.execute("""INSERT INTO users (id, kind, username, password, email) VALUES
             )
         """)
 
-cur.execute("""INSERT INTO users (id, kind, username, password, email) VALUES 
+cur.execute("""INSERT INTO users (kind, username, password, email) VALUES 
             (
-                2,
                 'admin',
                 'maylo',
                 'YoUCaNtF1nDTh1S',
@@ -117,9 +124,8 @@ cur.execute("""INSERT INTO users (id, kind, username, password, email) VALUES
         """)
 
 
-cur.execute("""INSERT INTO users (id, kind, username, password, email) VALUES 
+cur.execute("""INSERT INTO users (kind, username, password, email) VALUES 
             (
-                3,
                 'admin',
                 'Z4R0',
                 'Th1S1SR4GuL@R',
@@ -128,9 +134,8 @@ cur.execute("""INSERT INTO users (id, kind, username, password, email) VALUES
         """)
 
 
-cur.execute("""INSERT INTO users (id, kind, username, password, email) VALUES 
+cur.execute("""INSERT INTO users (kind, username, password, email) VALUES 
             (
-                4,
                 'admin',
                 'No0Ne!1',
                 'S3cR37P@ssw0RD',

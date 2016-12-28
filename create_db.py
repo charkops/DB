@@ -19,7 +19,7 @@ cur = conn.cursor()
 cur.execute("""CREATE TABLE books 
                 (
                     title varchar(100), 
-                    isbn varchar(13),
+                    isbn varchar(13) PRIMARY KEY,
                     year integer,
                     pages integer
                 ) 
@@ -28,7 +28,7 @@ cur.execute("""CREATE TABLE books
 # Create table authors.
 cur.execute("""CREATE TABLE authors
                 (
-                    id serial,
+                    id serial PRIMARY KEY,
                     name varchar(50),
                     origin varchar(50),
                     born varchar(20)
@@ -38,7 +38,7 @@ cur.execute("""CREATE TABLE authors
 # Create table users.
 cur.execute("""CREATE TABLE users
                 (
-                    id serial,
+                    id serial PRIMARY KEY,
                     kind varchar(50),
                     username varchar(25),
                     password varchar(25),
@@ -51,14 +51,15 @@ cur.execute("""CREATE TABLE lists
                 (
                     name varchar(75),
                     kind varchar(25),
-                    date varchar(25)
+                    date varchar(25),
+                    PRIMARY KEY (name, date)
                 ) 
                  """)
 
 # Create table publishers.
 cur.execute("""CREATE TABLE publishers 
                 (
-                    name varchar(75),
+                    name varchar(75) PRIMARY KEY,
                     location varchar(50),
                     established varchar(25)
                 ) 
@@ -68,10 +69,63 @@ cur.execute("""CREATE TABLE publishers
 cur.execute("""CREATE TABLE suggestions 
                 (
                     title varchar(75),
-                    date varchar(25)
+                    date varchar(25) PRIMARY KEY
                 ) 
                  """)
 
+# Create table categories.
+cur.execute("""CREATE TABLE categories 
+                (
+                    category varchar(75) PRIMARY KEY,
+                    traffic integer 
+                ) 
+                 """)
+
+# Create table published.
+cur.execute("""CREATE TABLE published 
+                (
+                    isbn varchar(13),
+                    publisher_name varchar(75),
+                    published_id integer
+                ) 
+                 """)
+
+# Create table in_suggestion.
+cur.execute("""CREATE TABLE in_suggestion
+                (
+                    date varchar(25),
+                    isbn varchar(13),
+                    num_items integer
+                ) 
+                 """)
+
+# Create table rates_book. 
+cur.execute("""CREATE TABLE rates_book
+                (
+                    id integer,
+                    isbn varchar(13),
+                    rating integer
+                ) 
+                 """)
+ 
+# Create table reviews_list. 
+cur.execute("""CREATE TABLE reviews_list 
+                (
+                    id integer,
+                    name_list varchar(75),
+                    date varchar(25),
+                    text varchar(1000)
+                ) 
+                 """)
+
+# Create table reviews_book. 
+cur.execute("""CREATE TABLE reviews_book 
+                (
+                    id integer,
+                    isbn varchar(13),
+                    text varchar(1000)
+                ) 
+                 """)
 
 
 # Commit changes and close the connection.
