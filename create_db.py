@@ -46,12 +46,13 @@ cur.execute("""CREATE TABLE users
                 ) 
                  """)
 
-# Create table list.
+# Create table lists.
 cur.execute("""CREATE TABLE lists 
                 (
+                    user_id integer REFERENCES users (id),
                     name varchar(75),
-                    kind varchar(25),
                     date varchar(25),
+                    kind varchar(25),
                     PRIMARY KEY (name, date)
                 ) 
                  """)
@@ -73,6 +74,14 @@ cur.execute("""CREATE TABLE suggestions
                 ) 
                  """)
 
+# Create table writes.
+cur.execute("""CREATE TABLE writes 
+                (
+                    isbn varchar(13) REFERENCES books (isbn),
+                    author_id integer REFERENCES authors (id)
+                ) 
+                 """)
+
 # Create table categories.
 cur.execute("""CREATE TABLE categories 
                 (
@@ -84,46 +93,92 @@ cur.execute("""CREATE TABLE categories
 # Create table published.
 cur.execute("""CREATE TABLE published 
                 (
-                    isbn varchar(13),
-                    publisher_name varchar(75),
-                    published_id integer
+                    isbn varchar(13) REFERENCES books (isbn),
+                    publisher_name varchar(75) NOT NULL REFERENCES publishers (name),
+                    published_id integer,
+                    CHECK (publisher_name != ''),
+                    CHECK (published_id > 0)
                 ) 
                  """)
+
+
+# Create function getTotalRegBooks().
+cur.execute("""CREATE FUNCTION getTotalRegBooks() RETURNS bigint AS $$
+                    SELECT COUNT(*) FROM books;
+                    $$ LANGUAGE SQL;
+                """)
 
 # Create table in_suggestion.
 cur.execute("""CREATE TABLE in_suggestion
                 (
-                    date varchar(25),
-                    isbn varchar(13),
-                    num_items integer
+                    date varchar(25) REFERENCES suggestions (date),
+                    isbn varchar(13) REFERENCES books (isbn),
+                    num_items integer,
+                    CHECK (num_items >= 0 AND (num_items <= getTotalRegBooks()))
                 ) 
                  """)
 
 # Create table rates_book. 
 cur.execute("""CREATE TABLE rates_book
                 (
-                    id integer,
-                    isbn varchar(13),
-                    rating integer
+                    id integer REFERENCES users(id),
+                    isbn varchar(13) REFERENCES books(isbn),
+                    rating numeric,
+                    CHECK (rating >= 0 AND rating <= 10)
                 ) 
                  """)
  
+# Create table rates_list. 
+cur.execute("""CREATE TABLE rates_list 
+                (
+                    id integer REFERENCES users(id),
+                    name_list varchar(75),
+                    date varchar(25),
+                    rating numeric,
+                    FOREIGN KEY (name_list, date) REFERENCES lists (name, date)
+                ) 
+                 """)
+
 # Create table reviews_list. 
 cur.execute("""CREATE TABLE reviews_list 
                 (
-                    id integer,
+                    id integer REFERENCES users (id),
                     name_list varchar(75),
                     date varchar(25),
-                    text varchar(1000)
+                    text varchar(1000),
+                    FOREIGN KEY (name_list, date) REFERENCES lists (name, date)
                 ) 
                  """)
 
 # Create table reviews_book. 
 cur.execute("""CREATE TABLE reviews_book 
                 (
-                    id integer,
-                    isbn varchar(13),
+                    id integer REFERENCES users (id),
+                    isbn varchar(13) REFERENCES books (isbn),
                     text varchar(1000)
+                ) 
+                 """)
+
+# Create function getTotalUsersNum().
+cur.execute("""CREATE FUNCTION getTotalUsersNum() RETURNS bigint AS $$
+                    SELECT COUNT(*) FROM users;
+                    $$ LANGUAGE SQL;
+                """)
+
+# Create table suggest. 
+cur.execute("""CREATE TABLE suggest 
+                (
+                    user_id integer REFERENCES users (id),
+                    date varchar(25) REFERENCES suggestions (date),
+                    CHECK (user_id > 0 AND (user_id <= getTotalUsersNum()))
+                ) 
+                 """)
+
+# Create table belongs_to. 
+cur.execute("""CREATE TABLE belongs_to 
+                (
+                    isbn varchar(13) REFERENCES books (isbn),
+                    kind varchar(25) REFERENCES categories (category)
                 ) 
                  """)
 
