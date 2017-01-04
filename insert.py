@@ -33,12 +33,34 @@ def load_author(author):
             %s
             ) 
             """, (author.name, author.hometown, author.born_at))
-
-
+            
+	#rating extraction function from goodreads API into the DB      
+def load_book_rating(book):
+	'''
+		Load the rating of the registered books int DB
+	'''
+	cur.execute("""INSERT INTO rates_book(isbn,rating) VALUES (
+				%s,
+				%s
+				)
+				""" , (book.isbn,book.average_rating)
+				)
+	#user registering function into the DB
+def load_users(user):
+	'''
+		Load users into the user array of the DB
+	'''
+	cur.execute(""" INSERT INTO users (kind,username) VALUES (
+				%s,
+				%s
+				)
+				""" , ("registered user",user.user_name)
+				)
+				
 # Connect to the database.
 try:
     # Change 'xbaremenos' to your specific username and database name.
-    conn = psycopg2.connect("dbname = 'xbaremenos' user = 'xbaremenos'")
+    conn = psycopg2.connect("dbname = 'mydb' user = 'm4yl0'")
 except:
     print('Could not connect to DB... exiting...')
     exit(1)
@@ -62,6 +84,7 @@ counter = 0
 # Create some entries to books.
 while loaded_books < NUM_BOOKS: 
     print 'Into book No. {0}'.format(counter + 1)
+    
     try:
         book = gc.book((counter + 1) * OFFSET)
     except KeyboardInterrupt:
@@ -75,6 +98,7 @@ while loaded_books < NUM_BOOKS:
     isbn = book.isbn
     year = book.publication_date[2]
     pages = book.num_pages
+    
     if year != None:
         year = int(year)
     if pages != None:
@@ -87,6 +111,7 @@ while loaded_books < NUM_BOOKS:
         continue
     
     load_book(title, isbn, year, pages, counter)
+    load_book_rating(book)
     loaded_books += 1
     counter += 1
 
@@ -142,6 +167,33 @@ cur.execute("""INSERT INTO users (kind, username, password, email) VALUES
                 'dimivars@ece.auth.gr'
             )
         """)
+
+##insert 6 registered users into the DB
+NUM_USERS = 6
+counter1 = 0
+counter2 = 0
+loaded_users = 0
+
+while loaded_users < NUM_USERS :
+ print 'Into users No. %s' % (counter1 + 1)
+	
+ try:
+		user = gc.user((counter1 + 1))
+ except KeyboardInterrupt:
+		raise KeyboardInterrupt
+		
+ print 'Trying to load user No. %s' %(counter1+1)
+ load_users(user)
+ 
+ if not user.user_name:
+	 print '\n EMPTY NAME ! '
+	
+ loaded_users += 1
+#increment the counter value
+ counter1 +=1
+
+     
+print 'Total users loaded = %s' %loaded_users
 
 # Commit changes and close connection, exit programm.
 try:
