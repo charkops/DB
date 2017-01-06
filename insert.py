@@ -3,7 +3,14 @@
 from goodreads import client
 from sys import exit
 import psycopg2
+import random
 
+# Did not want to import string.
+lowercase = 'abcdefghijklmnopqrstuvwxyz'
+numbers = '0123456789'
+
+# Categories - Random samples to pick from.
+categ = ['Drama', 'Sci-fi', 'Crime', 'Bio', 'Science', 'Adventure', 'Satire', 'Health', 'Guide', 'Childrens', 'Romance', 'Poetry', 'Travel']
 
 NUM_BOOKS = 10 
 OFFSET = 121
@@ -34,7 +41,7 @@ def load_author(author):
             ) 
             """, (author.name, author.hometown, author.born_at))
             
-	#rating extraction function from goodreads API into the DB      
+# Rating extraction function from goodreads API into the DB      
 def load_book_rating(book):
 	'''
 		Load the rating of the registered books int DB
@@ -45,22 +52,65 @@ def load_book_rating(book):
 				)
 				""" , (book.isbn,book.average_rating)
 				)
-	#user registering function into the DB
+
+# Functions to create random passwords and emails for users.
+def get_password():
+    # Returns a random password 10 - 18 characters long.
+    letters = ''.join(random.sample(lowercase, random.randint(8,14)))
+    nums = ''.join(random.sample(numbers,random.randint(2,4)))
+    return letters + nums
+
+def get_email():
+    # Returns a random email.
+    letters = ''.join(random.sample(lowercase, random.randint(8,14)))
+    nums = ''.join(random.sample(numbers,random.randint(2,4)))
+    return letters + nums + '@mail.com'
+    
+
+# User registering function into the DB
 def load_users(user):
 	'''
 		Load users into the user array of the DB
 	'''
-	cur.execute(""" INSERT INTO users (kind,username) VALUES (
+	cur.execute(""" INSERT INTO users (kind, username, password, email) VALUES (
 				%s,
-				%s
+				%s,
+                %s,
+                %s
 				)
-				""" , ("registered user",user.user_name)
+				""" , ("registered user",user.user_name,get_password(), get_email())
 				)
+
+# Function to initiate table categories.
+def load_categories(categ):
+    """
+        Load all categories present in 'categ' list.
+
+    """
+    for category in categ:
+        cur.execute("""INSERT INTO categories VALUES (
+                    %s,
+                    %s
+                    )  
+                """, (category, random.randint(0,100000)))
+
+# Function to fill table belongs_to.
+def load_belongs_to(isbn, categ):
+    '''
+        Assign each book with isbn to a random category.
+
+    '''
+    cur.execute(""" INSERT INTO belongs_to (isbn, kind) VALUES (
+                    %s,
+                    %s
+                    )
+                """, (isbn, random.choice(categ))) 
+
 				
 # Connect to the database.
 try:
     # Change 'xbaremenos' to your specific username and database name.
-    conn = psycopg2.connect("dbname = 'mydb' user = 'm4yl0'")
+    conn = psycopg2.connect("dbname = 'xbaremenos' user = 'xbaremenos'")
 except:
     print('Could not connect to DB... exiting...')
     exit(1)
@@ -78,6 +128,8 @@ except:
 # Create a cursor.
 cur = conn.cursor()
 
+# Create categories.
+load_categories(categ)
 
 loaded_books = 0
 counter = 0
@@ -114,6 +166,9 @@ while loaded_books < NUM_BOOKS:
     load_book_rating(book)
     loaded_books += 1
     counter += 1
+
+    # Insert into belongs_to.
+    load_belongs_to(isbn, categ)
 
     # Load associated author.
     try:
@@ -168,32 +223,36 @@ cur.execute("""INSERT INTO users (kind, username, password, email) VALUES
             )
         """)
 
-##insert 6 registered users into the DB
+# insert 6 registered users into the DB
 NUM_USERS = 6
-counter1 = 0
-counter2 = 0
+counter = 0
 loaded_users = 0
 
 while loaded_users < NUM_USERS :
- print 'Into users No. %s' % (counter1 + 1)
+    print 'Into users No. %s' % (counter + 1)
 	
- try:
-		user = gc.user((counter1 + 1))
- except KeyboardInterrupt:
-		raise KeyboardInterrupt
+    try:
+	    user = gc.user((counter + 1))
+    except KeyboardInterrupt:
+	    raise KeyboardInterrupt
+    except:
+        counter += 1
+        continue
 		
- print 'Trying to load user No. %s' %(counter1+1)
- load_users(user)
- 
- if not user.user_name:
-	 print '\n EMPTY NAME ! '
-	
- loaded_users += 1
-#increment the counter value
- counter1 +=1
+    if not user.user_name:
+        print 'EMPTY NAME !'
+        counter += 1
+        continue
 
-     
-print 'Total users loaded = %s' %loaded_users
+    print 'Trying to load user No. %s' %(counter + 1)
+    load_users(user)
+ 
+	
+    loaded_users += 1
+    # increment the counter value
+    counter += 1
+    
+print 'Total users loaded = %s' % loaded_users
 
 # Commit changes and close connection, exit programm.
 try:
