@@ -12,6 +12,8 @@ numbers = '0123456789'
 # Categories - Random samples to pick from.
 categ = ['Drama', 'Sci-fi', 'Crime', 'Bio', 'Science', 'Adventure', 'Satire', 'Health', 'Guide', 'Childrens', 'Romance', 'Poetry', 'Travel']
 
+# Random list names
+
 NUM_BOOKS = 10 
 OFFSET = 121
 
@@ -104,13 +106,12 @@ def load_belongs_to(isbn, categ):
                     %s,
                     %s
                     )
-                """, (isbn, random.choice(categ))) 
-
-				
+                """, (isbn, random.choice(categ))) 			
+					
 # Connect to the database.
 try:
     # Change 'xbaremenos' to your specific username and database name.
-    conn = psycopg2.connect("dbname = 'xbaremenos' user = 'xbaremenos'")
+    conn = psycopg2.connect("dbname = 'mydb' user = 'm4yl0'")
 except:
     print('Could not connect to DB... exiting...')
     exit(1)
@@ -246,14 +247,61 @@ while loaded_users < NUM_USERS :
 
     print 'Trying to load user No. %s' %(counter + 1)
     load_users(user)
- 
-	
+		
     loaded_users += 1
     # increment the counter value
     counter += 1
     
 print 'Total users loaded = %s' % loaded_users
 
+cur.execute( """ SELECT id FROM users WHERE username = 'sickpea'; """)
+ide = cur.fetchone()
+
+print ide
+
+ide_int = int(ide[0] + 3)
+
+print ide_int
+
+# FILL THE LISTS TABLE IN OUR DATABASE
+	
+cur.execute("""INSERT INTO lists (user_id,name,date,kind) VALUES 
+            (
+                6,
+                'My top 10 favourite Sci-fi books',
+                '2012-02-06',
+                'Sci-fi'
+            );
+        """)
+
+
+cur.execute("""INSERT INTO lists (user_id,name,date,kind) VALUES 
+            (
+                4,
+                'My top 10 favourite Sci-fi books',
+                '2012-02-06',
+                'Sci-fi'
+            );
+        """)
+cur.execute("""INSERT INTO lists (user_id,name,date,kind) VALUES 
+            (
+                '5',
+                'Poems from the Spanish Civil War',
+                '2013-11-21',
+                'Poetry'
+            );
+        """)
+cur.execute("""INSERT INTO lists (user_id,name,date,kind) VALUES 
+            (
+                '8',
+                '21 adventure books you should read before you die',
+                '2011-10-11',
+                'Adventure'
+            );
+        """)
+        
+
+	
 # Commit changes and close connection, exit programm.
 try:
     conn.commit()
