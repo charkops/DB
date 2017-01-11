@@ -12,8 +12,18 @@ numbers = '0123456789'
 # Categories - Random samples to pick from.
 categ = ['Drama', 'Sci-fi', 'Crime', 'Bio', 'Science', 'Adventure', 'Satire', 'Health', 'Guide', 'Childrens', 'Romance', 'Poetry', 'Travel']
 
+# Publishers names.
+pub_names = ['OMG books. Inc.','LOL books. Inc.', 'KEK books. Inc.', 'JK books. Inc.']
+
+# Lists names.
+lists_names = ['My top 10 favourite Sci-fi books', 'Poems from the Spanish Civil War', '21 adventure books you should read before you die']
+
+# Dictionary for keeping track of lists name-date connection.
+lists_dict = {'My top 10 favourite Sci-fi books' : '2012-02-06', 'Poems from the Spanish Civil War' : '2013-11-21', '21 adventure books you should read before you die' : '2011-10-11'}
+
 # Random list names
 
+NUM_USERS = 6
 NUM_BOOKS = 10 
 OFFSET = 121
 
@@ -46,7 +56,7 @@ def load_author(author):
 # Rating extraction function from goodreads API into the DB      
 def load_book_rating(book):
 	'''
-		Load the rating of the registered books int DB
+		Load the rating of the registered books into DB
 	'''
 	cur.execute("""INSERT INTO rates_book(isbn,rating) VALUES (
 				%s,
@@ -108,10 +118,120 @@ def load_belongs_to(isbn, categ):
                     )
                 """, (isbn, random.choice(categ))) 			
 					
-# Connect to the database.
+# Function to fill table writes.
+def load_writes(isbn, author_id):
+    '''
+        Assign each book with isbn to an author_id.
+
+    '''
+    cur.execute(""" INSERT INTO writes (isbn, author_id) VALUES (
+                    %s,
+                    %s
+                    )
+                """, (isbn, author_id)) 			
+
+# Function to fill table suggestions.
+def load_suggestions():
+    """
+        Load 4 hardcoded suggestions. Not much time left :)
+
+    """
+    cur.execute("""INSERT INTO suggestions (title, date) VALUES (
+                    'Top 10 books to stay fit.',
+                    '10-2-2016'
+                )""" )
+
+    cur.execute("""INSERT INTO suggestions (title, date) VALUES (
+                    'Keeping up with the New generation',
+                    '10-2-1994'
+                )""" )
+
+    cur.execute("""INSERT INTO suggestions (title, date) VALUES (
+                    'Introduction to Pen Testing',
+                    '11-6-2005'
+                )""" )
+    
+    cur.execute("""INSERT INTO suggestions (title, date) VALUES (
+                    'Is cyberpunk the new meta?',
+                    '11-6-2001'
+                )""" )
+
+# Function to fill table publishers.
+def load_publishers():
+    """
+        Load 4 hardcoded publishers. Still no time :)
+        
+    """
+    cur.execute("""INSERT INTO publishers (name, location, established) VALUES(
+                    'OMG books. Inc.',
+                    'NYC, New York',
+                    '4/2/1941'
+                )        
+                """)
+
+    cur.execute("""INSERT INTO publishers (name, location, established) VALUES(
+                    'LOL books. Inc.',
+                    'Portland, New Mexico',
+                    '13/5/1914'
+                )        
+                """)
+
+    cur.execute("""INSERT INTO publishers (name, location, established) VALUES(
+                    'KEK books. Inc.',
+                    'Thessaloniki, Greece',
+                    '12/5/1968'
+                )        
+                """)
+
+    cur.execute("""INSERT INTO publishers (name, location, established) VALUES(
+                    'JK books. Inc.',
+                    'Athens, Greece',
+                    '21/7/1984'
+                )        
+                """)
+
+# Funtion to fill table published.
+def load_published(isbn):
+    """
+        Assign each book (through their isbn) a publisher and a published_id
+
+    """
+    cur.execute("""INSERT INTO published (isbn, publisher_name, published_id) VALUES (
+                    %s,
+                    %s,
+                    %s
+                    )
+                """, (isbn, random.choice(pub_names), random.randint(1,10)))
+
+
+# Function to fill table rates_list.
+def load_rates_list(user_id):
+    """
+        Assign a rating to some list given a user_id.
+
+    """
+    random_name = random.choice(lists_names)
+    cur.execute("""INSERT INTO rates_list (id, name_list, date, rating) VALUES(
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                    )
+                """, (user_id, random_name, lists_dict[random_name], random.randint(1,10) ))
+
+
+
+
+
+    ########################
+    #### ---- MAIN ---- ####
+    ########################
+   
+
+    # Connect to the database.
 try:
     # Change 'xbaremenos' to your specific username and database name.
-    conn = psycopg2.connect("dbname = 'mydb' user = 'm4yl0'")
+    conn = psycopg2.connect("dbname = 'xbaremenos' user = 'xbaremenos'")
 except:
     print('Could not connect to DB... exiting...')
     exit(1)
@@ -131,6 +251,9 @@ cur = conn.cursor()
 
 # Create categories.
 load_categories(categ)
+
+# Load publishers.
+load_publishers()
 
 loaded_books = 0
 counter = 0
@@ -170,6 +293,8 @@ while loaded_books < NUM_BOOKS:
 
     # Insert into belongs_to.
     load_belongs_to(isbn, categ)
+    # Insert into published. 
+    load_published(isbn)
 
     # Load associated author.
     try:
@@ -179,13 +304,14 @@ while loaded_books < NUM_BOOKS:
         continue
     
     load_author(author)
-        
+    load_writes(isbn, loaded_books) 
 
 print 'Tried to load {0} books'.format(counter)
 print 'Added a total of {0} books.'.format(loaded_books)
 
 
 # Insert 4 admin users (ourselves)
+# This could be wrapped up in a function. Will do if i find time.
 cur.execute("""INSERT INTO users (kind, username, password, email) VALUES 
             (
                 'admin',
@@ -224,8 +350,7 @@ cur.execute("""INSERT INTO users (kind, username, password, email) VALUES
             )
         """)
 
-# insert 6 registered users into the DB
-NUM_USERS = 6
+# insert registered users into the DB
 counter = 0
 loaded_users = 0
 
@@ -251,17 +376,10 @@ while loaded_users < NUM_USERS :
     loaded_users += 1
     # increment the counter value
     counter += 1
+
     
 print 'Total users loaded = %s' % loaded_users
 
-cur.execute( """ SELECT id FROM users WHERE username = 'sickpea'; """)
-ide = cur.fetchone()
-
-print ide
-
-ide_int = int(ide[0] + 3)
-
-print ide_int
 
 # FILL THE LISTS TABLE IN OUR DATABASE
 	
@@ -279,7 +397,7 @@ cur.execute("""INSERT INTO lists (user_id,name,date,kind) VALUES
             (
                 4,
                 'My top 10 favourite Sci-fi books',
-                '2012-02-06',
+                '2013-02-06',
                 'Sci-fi'
             );
         """)
@@ -300,8 +418,18 @@ cur.execute("""INSERT INTO lists (user_id,name,date,kind) VALUES
             );
         """)
         
+print('Loaded lists')
 
-	
+load_suggestions()
+
+print('Loaded suggestions')
+
+for i in range(loaded_users):
+    load_rates_list(i + 1)
+
+print('Loaded rates_list')
+
+
 # Commit changes and close connection, exit programm.
 try:
     conn.commit()
