@@ -18,8 +18,14 @@ pub_names = ['OMG books. Inc.','LOL books. Inc.', 'KEK books. Inc.', 'JK books. 
 # Lists names.
 lists_names = ['My top 10 favourite Sci-fi books', 'Poems from the Spanish Civil War', '21 adventure books you should read before you die']
 
+# Suggestions dates.
+sug_dates = ['10-2-2016', '10-2-1994', '11-6-2005', '11-6-2001']
+
 # Dictionary for keeping track of lists name-date connection.
 lists_dict = {'My top 10 favourite Sci-fi books' : '2012-02-06', 'Poems from the Spanish Civil War' : '2013-11-21', '21 adventure books you should read before you die' : '2011-10-11'}
+
+# Temp books isbn.
+books_isbn = []
 
 # Random list names
 
@@ -220,6 +226,71 @@ def load_rates_list(user_id):
                 """, (user_id, random_name, lists_dict[random_name], random.randint(1,10) ))
 
 
+# Function to fill table in_suggestions.
+def load_in_suggestion(isbn, loaded_books):
+    """
+        Given the isbn of a book. Insert values to table in_suggestion.
+
+    """
+    cur.execute("""INSERT INTO in_suggestion (date, isbn, num_items) VALUES (
+                    %s,
+                    %s,
+                    %s
+                )
+                """, (random.choice(sug_dates), isbn, random.randint(1,loaded_books)))
+
+# Random string generator 1 - 1000 characters.
+def random_text(length):
+    string = ''
+    for i in range(1,random.randint(1,length)):
+        string += random.choice(lowercase)
+
+    return string
+
+
+# Function to fill table reviews_book.
+def load_reviews_book(user_id):
+    """
+        Choose a book to review, given a user_id. Generate random text as review.
+        
+    """
+    cur.execute("""INSERT INTO reviews_book (id, isbn, text) VALUES (
+                    %s,
+                    %s,
+                    %s
+                )
+                """, (user_id, random.choice(books_isbn), random_text(1000)))
+
+
+
+# Function to fill table reviews_list.
+def load_reviews_list(user_id):
+    """
+        Give a random review in a random list, given a user_id.
+    
+    """
+    random_name = random.choice(lists_names)
+    cur.execute("""INSERT INTO reviews_list (id, name_list, date, text) VALUES (
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
+                """, (user_id, random_name, lists_dict[random_name], random_text(1000)))
+
+
+# Function to fill table suggest.
+def load_suggest(user_id):
+    """
+        Takes user_id as argument and fills the table with a random date.
+    
+    """
+    cur.execute("""INSERT INTO suggest (user_id, date) VALUES (
+                %s,
+                %s
+                )
+                """, (user_id, random.choice(sug_dates))) 
+
 
 
 
@@ -231,7 +302,7 @@ def load_rates_list(user_id):
     # Connect to the database.
 try:
     # Change 'xbaremenos' to your specific username and database name.
-    conn = psycopg2.connect("dbname = 'mydb' user = 'm4yl0'")
+    conn = psycopg2.connect("dbname = 'xbaremenos' user = 'xbaremenos'")
 except:
     print('Could not connect to DB... exiting...')
     exit(1)
@@ -254,6 +325,10 @@ load_categories(categ)
 
 # Load publishers.
 load_publishers()
+
+# Load suggestions.
+load_suggestions()
+
 
 loaded_books = 0
 counter = 0
@@ -290,6 +365,7 @@ while loaded_books < NUM_BOOKS:
     load_book_rating(book)
     loaded_books += 1
     counter += 1
+    books_isbn.append(isbn)
 
     # Insert into belongs_to.
     load_belongs_to(isbn, categ)
@@ -305,6 +381,7 @@ while loaded_books < NUM_BOOKS:
     
     load_author(author)
     load_writes(isbn, loaded_books) 
+    load_in_suggestion(isbn, loaded_books)
 
 print 'Tried to load {0} books'.format(counter)
 print 'Added a total of {0} books.'.format(loaded_books)
@@ -377,6 +454,7 @@ while loaded_users < NUM_USERS :
     # increment the counter value
     counter += 1
 
+    load_reviews_book(loaded_users)
     
 print 'Total users loaded = %s' % loaded_users
 
@@ -420,12 +498,10 @@ cur.execute("""INSERT INTO lists (user_id,name,date,kind) VALUES
         
 print('Loaded lists')
 
-load_suggestions()
-
-print('Loaded suggestions')
-
 for i in range(loaded_users):
     load_rates_list(i + 1)
+    load_reviews_list(i + 1)
+    load_suggest(i + 1)
 
 print('Loaded rates_list')
 
