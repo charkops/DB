@@ -231,7 +231,7 @@ def load_rates_list(user_id):
     # Connect to the database.
 try:
     # Change 'xbaremenos' to your specific username and database name.
-    conn = psycopg2.connect("dbname = 'xbaremenos' user = 'xbaremenos'")
+    conn = psycopg2.connect("dbname = 'mydb' user = 'm4yl0'")
 except:
     print('Could not connect to DB... exiting...')
     exit(1)
@@ -428,6 +428,27 @@ for i in range(loaded_users):
     load_rates_list(i + 1)
 
 print('Loaded rates_list')
+
+
+# ROLES PART OF OUR DATABASE
+
+
+# Simple example for "any" registered user role 
+cur.execute(""" CREATE ROLE registered_user WITH PASSWORD 'abcdpassruser123'""")
+cur.execute("""ALTER ROLE registered_user WITH LOGIN""")
+
+cur.execute("""GRANT SELECT ON books,authors,lists,publishers,reviews_book,reviews_list TO registered_user""")
+cur.execute("""GRANT INSERT ON lists TO registered_user""")
+
+# Simple example for "each" of the admins set in the database role
+cur.execute(""" CREATE ROLE administrator WITH PASSWORD 'admin123password'""")
+cur.execute("""ALTER ROLE administrator WITH LOGIN""")
+
+cur.execute("""GRANT SELECT , INSERT , UPDATE ,DELETE ON books,authors,users,lists,publishers,suggestions,writes,categories,
+								published,in_suggestion,reviews_book,reviews_list,rates_book,rates_list,suggest,
+								writes TO administrator""")
+
+
 
 
 # Commit changes and close connection, exit programm.
